@@ -14,7 +14,6 @@ def parse(path):
     f.seek(0, os.SEEK_SET)
 
     magic = struct.unpack(types.uint64, f.read(8))[0]
-    print(hex(magic))
     if magic != DIA_MAGIC:
         raise Exception("Invalid file header")
     version = struct.unpack(types.uint16,f.read(2))[0]
