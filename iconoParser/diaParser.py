@@ -2,6 +2,7 @@ import os
 import struct
 
 import iconoParser.types as types
+import iconoParser.dialogDecode as iconoDecode
 
 DIA_MAGIC = 0x109a302e31525241
 
@@ -25,6 +26,6 @@ def parse(path):
             unk2 = struct.unpack(types.uint32, f.read(4))[0]
             textSize = struct.unpack(types.uint32, f.read(4))[0]
             content = f.read(textSize)
-            output.append([i, textSize,content])
+            output.append([i, textSize, iconoDecode.decode(content)])
     
     return output

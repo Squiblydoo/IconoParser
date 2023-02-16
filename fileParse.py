@@ -27,7 +27,7 @@ def main():
     args = parser.parse_args()
 
     convert = iconoParser.diaParser.parse(args.f)
-    header = ["dialog size", "text size", "text"]
+    header = ["dialog part", "text size (do not edit)", "text"]
     output = []
     output.append(header)
     for item in convert:
