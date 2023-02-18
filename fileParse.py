@@ -46,7 +46,7 @@ def main():
         
         convert = iconoParser.csvParser.parse(args.f)
         output = FILE_MAGIC + File_Version + convert
-        with open("dia2.txt", "wb") as dia_file:
+        with open("dia2", "wb") as dia_file:
             dia_file.write(output)
 
     
