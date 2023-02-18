@@ -41,7 +41,7 @@ def parse(path):
         
         ## Encode the text stripping off the whitespace that was inadvertently added to the string.
         if parts[0] == "0" or parts[0] == "1":
-            encodedText = iconoEncode.encode(parts[2].strip())
+            encodedText = iconoEncode.encode(parts[2].replace("\n", "").replace("\r", ""))
         elif parts[0] == "2":
             encodedText = bytes(parts[2].strip().strip('"'), "utf-8")
         

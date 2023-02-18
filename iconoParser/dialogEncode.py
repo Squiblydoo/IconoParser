@@ -47,8 +47,15 @@ def encode(textContent):
             ## then add that character.
             else:
                 while textContent[i] != "}":
-                    line += bytes(textContent[i],"utf-8")
-                    i += 1
+                    ## In some cases, there can be a second set of brackets
+                    ## within a bracket and it needs to have the Pipe | before
+                    ## the second set of brackets.
+                    if textContent[i] == "{":
+                        line = line + b'|' + bytes(textContent[i],"utf-8")
+                        i += 1
+                    else:
+                        line += bytes(textContent[i],"utf-8")
+                        i += 1
                 if textContent[i] not in encodingDictionary.TYPE_DICT.values():
                     line += bytes(textContent[i], "utf-8")
                     i += 1
