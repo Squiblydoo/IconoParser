@@ -37,7 +37,10 @@ def csvOutput(queryResult, separator=',', quote='"'):
     """
     Display the data according to csv format
     """
-    csvWriter = csv.writer(sys.stdout, delimiter=separator, quotechar=quote,
+    with open("parsed.csv", 'w', encoding="utf-8") as csvfile:
+        csvWriter = csv.writer(csvfile, delimiter=separator, quotechar=quote,
                            quoting=csv.QUOTE_MINIMAL)
-    for line in queryResult:
-        csvWriter.writerow(line)
+        for line in queryResult:
+            csvWriter.writerow(line)
+
+    

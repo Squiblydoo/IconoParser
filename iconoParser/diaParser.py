@@ -4,7 +4,7 @@ import struct
 import iconoParser.types as types
 import iconoParser.dialogDecode as iconoDecode
 
-DIA_MAGIC = 0x109a302e31525241
+FILE_MAGIC = 0x109a302e31525241
 
 def parse(path):
 
@@ -15,8 +15,8 @@ def parse(path):
     f.seek(0, os.SEEK_SET)
 
     magic = struct.unpack(types.uint64, f.read(8))[0]
-    if magic != DIA_MAGIC:
-        raise Exception("Invalid file header")
+    if magic != FILE_MAGIC:
+        raise Exception("Invalid file")
     version = struct.unpack(types.uint16,f.read(2))[0]
  
     while (end - f.tell()) > 0:    
