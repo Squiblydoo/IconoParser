@@ -16,7 +16,7 @@ def encode(textContent):
     
     ## We will use a for-loop to convert the characters to the
     ## appropriate format and add the appropriate separators
-    textContent = textContent.strip('"')
+    #textContent = textContent.strip('"')
     i = 0
     ## For each character in the decoded text, loop through
     ## the following encoding process.

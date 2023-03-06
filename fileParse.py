@@ -6,6 +6,31 @@ import sys
 import iconoParser.diaParser
 import iconoParser.csvParser
 import iconoParser.csvOutput
+import iconoParser.rawParser
+
+def guiParse(path):
+    convert = iconoParser.diaParser.parse(path)
+    header = ["DialogPart", "TextSize", "Text"]
+    output = []
+    output.append(header)
+    for item in convert:
+        line = []
+        for i in range(len(header)):
+            line.append(item[i])
+        output.append(line)  
+    return output
+
+def guiExport(data):
+        FILE_MAGIC = b'\x41\x52\x52\x31\x2e\x30\x9a\x10'
+        File_Version = b'\x00\x00'
+        
+        convert = iconoParser.rawParser.parse(data)
+        output = FILE_MAGIC + File_Version + convert
+        with open("dia2", "wb") as dia_file:
+            dia_file.write(output)
+
+
+
 
 def main():
     parser = argparse.ArgumentParser(
