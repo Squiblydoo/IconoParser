@@ -1,7 +1,8 @@
 # IconoParser
-A GUI parser for converting the text from the game Iconoclasts into a human readable format and back again.
+A GUI parser or CLI parser for converting the text from the game Iconoclasts into a human readable format and back again.
 
 # How to use
+## Method one: GUI
 Download built program from releases page. 
 Run the program. Go to the game's directory (on Windows this is probably "C:\Program Files (x86)\Steam\steamapps\common\Iconoclasts\data\")
 Drag-and-Drop a "dia" file from the directory into the main part of the window. Please note, only the file named "dia" is fully supported. I plan to add support for the other language files at a later time.*
@@ -17,3 +18,27 @@ I've also included a video below.
 *IF YOU WANT TO CONTRIBUTE TO THE DECODING OF THESE FILES, PLEASE DO!
 
 https://user-images.githubusercontent.com/77356206/223280939-daeabce9-5212-4ea3-aa97-6065e7065a89.mp4
+
+## Method two:
+The tool can also be used with CLI. This is best if you just want to dump the whole text file, or modify it in a different editor.
+To use the Commandline there are two commands to know and python 3 needs to be installed:
+
+**Convert to CSV**<br>
+`python fileParser.py -f dia -c csv`<br>
+This command takes the following parameters:<br>
+- name of the parser (`fileParser.py`) 
+- the "file flag" (`-f`) 
+- the name of the file we are converting from (`dia`)
+- the "conversion" flag (`-c`) 
+- the format we are converting to `csv`
+
+**Convert from CSV**<br>
+`python fileParser.py -f parsed.csv -c dia`<br>
+This command takes the following parameters:<br>
+- name of the parser (`fileParser.py`)
+- the "file flag" (`-f`)
+- the name of the file we are converting from (`parsed.csv`)
+- the "conversion" flag (`-c`)
+- the format we are converting to `dia`
+
+Known issue: using both methods could cause some wonkiness. The CSV method currently has a discrepency that is caused by using the CSV format. I am planning to modify this format to avoid these problems but have not yet done so.
