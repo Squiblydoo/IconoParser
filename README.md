@@ -7,7 +7,7 @@ A GUI parser or CLI parser for converting the text from the game Iconoclasts int
 
 # How to use
 ## Method one: GUI
-Download built program from releases page. 
+Download built program [from releases page here](https://github.com/Squiblydoo/IconoParser/releases). 
 Run the program. Go to the game's directory (on Windows this is probably "C:\Program Files (x86)\Steam\steamapps\common\Iconoclasts\data\")
 Drag-and-Drop a "dia" file from the directory into the main part of the window. Please note, only the file named "dia" is fully supported. I plan to add support for the other language files at a later time.*
 
