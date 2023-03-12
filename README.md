@@ -1,4 +1,8 @@
 # IconoParser
+![Robin_Stock_Icon_Scaled](https://user-images.githubusercontent.com/77356206/224560771-74a4db37-9020-41b4-8533-9c5d6c6f2052.png)
+<br>
+(Image/app Icon by Sho Sakazaki, used with permission)
+
 A GUI parser or CLI parser for converting the text from the game Iconoclasts into a human readable format and back again.
 
 # How to use
