@@ -1,0 +1,1 @@
+pyinstaller --noconsole --onefile --additional-hooks-dir=./hook IconoParserGUI.py --icon=Robin_Stock_Icon.ico

@@ -13,8 +13,9 @@ def get_key(val):
     for key, value in helperDict.DIALOG_FUNCTION.items():
         if val == value:
             return key
-
+        
 class main_window(TkinterDnD.Tk):
+    
         
     def __init__(self):
         TkinterDnD.Tk.__init__(self)
@@ -28,13 +29,21 @@ class main_window(TkinterDnD.Tk):
         style.map('Treeview',
                 background=[('selected', 'blue')])
 
+
+        instructionLabel = Label(self, text="Drag and drop dialog file onto window below")
+        instructionLabel.pack()
+
         # Frame and scrollbar for Treeview
         treeFrame = Frame(self)
         treeFrame.pack(pady=20)
         treeScroll = Scrollbar(treeFrame)
-        self.dialogTable = ttk.Treeview(treeFrame, yscrollcommand=treeScroll.set)
+        
+        horizontalScroll = Scrollbar(treeFrame, orient='horizontal')
+        self.dialogTable = ttk.Treeview(treeFrame, yscrollcommand=treeScroll.set, xscrollcommand=horizontalScroll.set)
         treeScroll.config(command=self.dialogTable.yview)
         treeScroll.pack(side=RIGHT, fill=Y)
+        horizontalScroll.config(command=self.dialogTable.xview)
+        horizontalScroll.pack(side=BOTTOM, fill=X)
         self.dialogTable.pack()
         
         # Default tabel design
@@ -54,6 +63,7 @@ class main_window(TkinterDnD.Tk):
         self.dialogTable.tag_configure("dialogAndAction", background="white")
         self.dialogTable.drop_target_register(DND_FILES)
         self.dialogTable.dnd_bind("<<Drop>>", self.processFileUpload)
+        self.dialogTable.bind("<Double-1>", self.doubleClickRecord)
         self.dialogTable.pack()
 
 
@@ -67,14 +77,14 @@ class main_window(TkinterDnD.Tk):
 
         newDialogLabel = Label(modifyFrame, text="Dialog")
         newDialogLabel.pack()
-        self.newTextEntry = st.ScrolledText(modifyFrame, width=50, height=3)
+        self.newTextEntry = st.ScrolledText(modifyFrame, width=50, height=5)
         self.newTextEntry.pack()
 
         #add_record = Button(modifyFrame, text="Add Dialog", command=addRecord)
         #add_record.pack()
 
-        selectButton = Button(modifyFrame, text="Select Record", command=self.selectRecord)
-        selectButton.pack()
+        #selectButton = Button(modifyFrame, text="Select Record", command=self.selectRecord)
+        #selectButton.pack()
 
         updateButton = Button(modifyFrame, text="Save Changes", command=self.saveUpdatedRecord)
         updateButton.pack()
@@ -91,8 +101,9 @@ class main_window(TkinterDnD.Tk):
             "{bub01}",
             "{bub02}", 
             "{bub03}",
-            "{bub04}",
-            "{bub05}")
+            "{bub04} = used for tutorials",
+            "{bub05}",
+            "{bub06} = common dialog box")
         def changeDialogStyle():
             print()
         dialogStyles.bind('<<ComboboxSelected>>', changeDialogStyle)
@@ -119,11 +130,30 @@ class main_window(TkinterDnD.Tk):
         colorOptions.bind('<<ComboboxSelected>>', changeColorChoice)
         colorOptions.pack()
 
+        textAnimationOptionsLabel = Label(keyFrame, text="Text Animations")
+        textAnimationOptionsLabel.pack()
+        textAnimationSelection = StringVar()
+        textAnimationOptions = ttk.Combobox(keyFrame, textvariable=textAnimationSelection, width=50)
+        textAnimationOptions['values'] = (
+            "{type01} = normal text",
+            "{type02} = shaking text")
+        def changeTextAnimation():
+            pass
+        textAnimationOptions.bind('<<ComboboxSelected>>', changeTextAnimation)
+        textAnimationOptions.pack()
+
+
         exportChanges = Button(self, text="Export Changes", command=self.dataExport)
         exportChanges.pack()
 
     # Load selected record details
     def selectRecord(self):
+        self.newTextEntry.delete("0.0", "end")
+        selectedRow = self.dialogTable.focus()
+        textValue = self.dialogTable.item(selectedRow, 'values')
+        self.newTextEntry.insert(INSERT, textValue[1])
+
+    def doubleClickRecord(self, event):
         self.newTextEntry.delete("0.0", "end")
         selectedRow = self.dialogTable.focus()
         textValue = self.dialogTable.item(selectedRow, 'values')

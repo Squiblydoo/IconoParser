@@ -25,7 +25,7 @@ def parse(data):
                 
         
         if line[0] == 0 or line[0] == 1:
-            encodedText = iconoEncode.encode(line[2])
+            encodedText = iconoEncode.encode(line[2], "raw")
         elif line[0] == 2:
             encodedText = bytes(line[2], "utf-8")
         
