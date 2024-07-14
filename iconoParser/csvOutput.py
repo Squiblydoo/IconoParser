@@ -33,11 +33,11 @@ CSV Output Module
 import csv
 import sys
 
-def csvOutput(queryResult, separator=',', quote='"'):
+def csvOutput(queryResult, output_name, separator=',', quote='"'):
     """
     Display the data according to csv format
     """
-    with open("parsed.csv", 'w', encoding="utf-8") as csvfile:
+    with open(output_name, 'w', encoding="utf-8") as csvfile:
         csvWriter = csv.writer(csvfile, delimiter=separator, quotechar=quote,
                            quoting=csv.QUOTE_MINIMAL)
         for line in queryResult:

@@ -63,7 +63,7 @@ def main():
             output.append(line)  
                 
         sys.modules["iconoParser.csvOutput"].__getattribute__(
-            "csvOutput")(output)
+            "csvOutput")(output, args.f + ".csv")
     
     elif args.c == "dia":
         FILE_MAGIC = b'\x41\x52\x52\x31\x2e\x30\x9a\x10'

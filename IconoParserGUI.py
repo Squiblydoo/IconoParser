@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import ttk
 import tkinter.scrolledtext as st
 from tkinterdnd2 import DND_FILES, TkinterDnD
-
+from tkinter import filedialog
 
 #IconoParser Pluggins
 import iconoParser.helperDictionaries as helperDict
@@ -30,8 +30,16 @@ class main_window(TkinterDnD.Tk):
                 background=[('selected', 'blue')])
 
 
-        instructionLabel = Label(self, text="Drag and drop dialog file onto window below")
+        instructionLabel = Label(self, text="Use menu to open a file or drag and drop a file into the table.")
         instructionLabel.pack()
+
+
+        menu = Menu(self)
+        self.config(menu=menu)
+        file_menu = Menu(menu, tearoff=0)
+        menu.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Open", command=self.openFile)
+
 
         # Frame and scrollbar for Treeview
         treeFrame = Frame(self)
@@ -146,6 +154,10 @@ class main_window(TkinterDnD.Tk):
         exportChanges = Button(self, text="Export Changes", command=self.dataExport)
         exportChanges.pack()
 
+    def openFile(self):
+        file_path = filedialog.askopenfilename()
+        self.processFileUpload(file_path)
+
     # Load selected record details
     def selectRecord(self):
         self.newTextEntry.delete("0.0", "end")
@@ -174,12 +186,16 @@ class main_window(TkinterDnD.Tk):
         
     def processFileUpload(self, event):
         # Remove brackets if there are spaces in path
-        filePath = event.data
-        if filePath[0] == '{' and filePath[-1] == '}':
-            filePath=filePath[1:-1]
+        try:
+            file_path = event.data
+        except AttributeError:
+            file_path = event
+
+        if file_path[0] == '{' and file_path[-1] == '}':
+            file_path=file_path[1:-1]
 
         #Process file using iconoParser
-        data = fileParse.guiParse(filePath)
+        data = fileParse.guiParse(file_path)
         self.count = 0
         self.dialogCount = 0
         for record in data:
