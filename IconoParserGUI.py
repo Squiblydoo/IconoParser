@@ -21,7 +21,7 @@ class main_window(TkinterDnD.Tk):
         TkinterDnD.Tk.__init__(self)
 
         # Basic Window Configuration
-        self.geometry("800x600")
+        self.geometry("900x600")
         self.title("IconoParser")
         style = ttk.Style()
         style.configure("Treeview",
@@ -38,7 +38,17 @@ class main_window(TkinterDnD.Tk):
         self.config(menu=menu)
         file_menu = Menu(menu, tearoff=0)
         menu.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open", command=self.openFile)
+        file_menu.add_command(label="Open File", command=self.openFile)
+        file_menu.add_command(label="Export", command=self.exportFile)
+        file_menu.add_command(label="Close File", command=self.closeFile)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.quit)
+        
+        help_menu = Menu(menu, tearoff=0)
+        menu.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="Getting Started", command=self.starting_advice)
+        help_menu.add_command(label="I broke something!", command=self.broken_help)
+        help_menu.add_command(label="About", command=self.about)
 
 
         # Frame and scrollbar for Treeview
@@ -157,6 +167,37 @@ class main_window(TkinterDnD.Tk):
     def openFile(self):
         file_path = filedialog.askopenfilename()
         self.processFileUpload(file_path)
+    
+    def exportFile(self):
+        self.dataExport()
+
+    def closeFile(self):
+        self.dialogTable.delete(*self.dialogTable.get_children())
+        self.count = 0
+        self.dialogCount = 0
+        self.newTextEntry.delete("0.0", "end")
+    
+    def about(self):
+        about_window = Toplevel(self)
+        about_window.title("About")
+        about_window.geometry("400x400")
+        about_label = Label(about_window, text="\n\nIconoParser is a tool for editing files in Iconoclasts.\nCreated by Squiblydoo.\nRobin art is by Sho Sakazaki, used with permission.")
+        about_label.pack()
+        about_window.mainloop()
+
+    def broken_help(self):
+        broken_window = Toplevel(self)
+        broken_window.title("I broke something!")
+        broken_window.geometry("400x400")
+        broken_label = Label(broken_window, text="\n\nIf you attempted to edit something and want to\n revert there are two options.\n1) When editing a file a copy is made with '_backup'.\n You can replace the malformed one with this copy.\n The backup is in the same directory as the file you edited.\n2) You can also 'Verify Game Files' in steam to restore \nthe original files. All modified files in the \ngame's directory will be checked and restored.")
+        broken_label.pack()
+
+    def starting_advice(self):
+        start_window = Toplevel(self)
+        start_window.title("Getting Started")
+        start_window.geometry("400x400")
+        start_label = Label(start_window, text="\n\nTo get started:\n drag and drop a 'dia' file onto the window.\nYou can then edit the values in the table.\nWhen you are finished, you can export the file.\nPut the modified file in the game directory to use it.\n \nThese files are normally located as follows:\nWindows:\n C:/Program Files (x86)/Steam/steamapps/common\n/Iconoclasts/data/\nMac: \n~/Library/Application Support/Steam/steamapps/common\n/Iconoclasts/data/\nLinux: \n~/.steam/steam/steamapps/common\n/Iconoclasts/data/")
+        start_label.pack()
 
     # Load selected record details
     def selectRecord(self):

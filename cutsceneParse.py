@@ -10,14 +10,13 @@ import iconoParser.csvOutput
 import iconoParser.rawParser
 
 def guiParse(file_path):
+        convert, frame_length = iconoParser.cutsceneParser.parse(file_path)
+        frames = [list(group) for group in zip(*convert)]
+        
         backup_file = file_path + "_backup"
         shutil.copy(file_path, backup_file)
         output = []
-        
-        # Assuming convert is an array of arrays, and all inner arrays are of the same size
 
-        convert, frame_length = iconoParser.cutsceneParser.parse(file_path)
-        frames = [list(group) for group in zip(*convert)]
         return frames, frame_length
         
 
@@ -43,14 +42,14 @@ def main():
     if args.c == "csv":
         convert, frame_length = iconoParser.cutsceneParser.parse(args.f)
 
+        # Assuming convert is an array of arrays, and all inner arrays are of the same size
+        frames = [list(group) for group in zip(*convert)]
+
         # Make a backup of the original file before modifying the original
         backup_file = args.f + "_backup"
         shutil.copy(args.f, backup_file)
         output = []
-        
-        # Assuming convert is an array of arrays, and all inner arrays are of the same size
-        frames = [list(group) for group in zip(*convert)]
-                
+
         sys.modules["iconoParser.csvOutput"].__getattribute__(
             "csvOutput")(frames, args.f + ".csv")
     

@@ -39,11 +39,13 @@ def parse(path):
         for _ in range(int(unknown_section_size)):  # Changed loop variable to _ to avoid shadowing
             unknown_id = struct.unpack('I', f.read(4))[0]
             unk_type = struct.unpack('I', f.read(4))[0]
-            data_len = 0  # Initialize data_len to ensure it's defined even if unk_type != 0x02
-            data = b''  # Initialize data to ensure it's defined even if unk_type != 0x02
             if unk_type == 0x02:
                 data_len = struct.unpack('I', f.read(4))[0]
                 data = f.read(data_len)
+            elif unk_type == 0x06:
+                data_len = ''
+                data = ''
+            
             # Use unknown_id as the key and store the rest as values in a list
             current_data.append([unknown_id, unk_type, data_len, data])
         output.append(current_data)  # Append the dictionary to unknown_data at the end of the outer loop
@@ -57,7 +59,7 @@ def parse(path):
         if animation_type == 0x02:
                 anim_len = struct.unpack(types.uint32, f.read(4))[0]
                 anim_data = f.read(anim_len)
-        if animation_type == 0x06:
+        elif animation_type == 0x06:
                 anim_len = ''
                 anim_data = ''
         animation_data.append([animation_id, animation_type, anim_len, anim_data])
@@ -69,12 +71,10 @@ def parse(path):
         for _ in range(int(unknown_section_size)):  
             unknown_id = struct.unpack('I', f.read(4))[0]
             unk_type = struct.unpack('I', f.read(4))[0]
-            data_len = 0  
-            data = b''  
             if unk_type == 0x02:
                 data_len = struct.unpack('I', f.read(4))[0]
                 data = f.read(data_len)
-            if unk_type == 0x06:
+            elif unk_type == 0x06:
                 data_len = ''
                 data = ''
             current_data.append([unknown_id, unk_type, data_len, data])
