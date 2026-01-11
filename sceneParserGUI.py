@@ -10,6 +10,7 @@ import re
 import iconoParser.helperDictionaries as helperDict
 import cutsceneParse
 import iconoParser.backtoCutSceneFormat
+import iconoParser.animation as animation
 
 class main_window(TkinterDnD.Tk):
     
@@ -18,7 +19,7 @@ class main_window(TkinterDnD.Tk):
         TkinterDnD.Tk.__init__(self)
 
         # Basic Window Configuration
-        self.geometry("660x750")
+        self.geometry("660x760")
         self.title("IconoParser")
         style = ttk.Style()
         style.configure("Treeview",
@@ -96,7 +97,7 @@ class main_window(TkinterDnD.Tk):
 
         navigation_frame = Frame(self)
         navigation_frame.pack()        
-        self.frame_number_label = Label(navigation_frame, text="Frame Number: 0")
+        self.frame_number_label = Label(navigation_frame, text="Frame Number: 0 / 0")
         self.frame_number_label.grid(row=0, column=0)
         
         self.current_array_index = 0  # Initialize the current array index
@@ -117,6 +118,12 @@ class main_window(TkinterDnD.Tk):
         self.insert_new_animation_frame.grid(row=1, column=0)
         self.delete_frame_button = Button(navigation_frame, text="Delete Frame", command=self.delete_frame)
         self.delete_frame_button.grid(row=1, column=1)
+
+        #Animation 
+        self.animate_single_frame_button = Button(navigation_frame, text="Animate Single Frame", command=self.animate_single_frame)
+        self.animate_single_frame_button.grid(row=2, column=0)
+        # self.animate_all_frames_button = Button(navigation_frame, text="Animate All Frames", command=self.animate_all_frames)
+        # self.animate_all_frames_button.grid(row=2, column=1)
     
         optionFrame = Frame(self)
         optionFrame.pack()
@@ -165,10 +172,11 @@ class main_window(TkinterDnD.Tk):
         start_label.pack()
 
     def closeFile(self):
+        self.current_array_index = 0
         self.stored_frames = []
         self.frame_table.delete(*self.frame_table.get_children())
-        self.frame_number_label.config(text="Frame Number: 0")
-
+        self.frame_number_label.config(text="Frame Number: 0 / 0")
+        
     def exportFile(self):
         file_path = filedialog.asksaveasfilename()
         convert = iconoParser.backtoCutSceneFormat.guiExport(self.stored_frames)
@@ -181,42 +189,38 @@ class main_window(TkinterDnD.Tk):
         with open(file_path, "wb") as dia_file:
             dia_file.write(output)
 
-    # def insert_new_frame(self):
-    #     self.current_array_index += 1
-    #     self.stored_frames.insert(self.current_array_index, [])  # Insert an empty frame at the current index
-    #     self.update_frame_number_label()
-    #     self.frame_table.delete(*self.frame_table.get_children())
-    #     self.frame_number_label.config(text=f"Frame Number: {self.current_array_index}")
     def go_to_frame(self):
         self.current_array_index = int(self.go_to_frame_entry.get())
-        self.update_frame_number_label()
         self.load_frame_data()
 
     def insert_new_animation_frame(self):
         self.current_array_index += 1
         self.stored_frames.insert(self.current_array_index, [[1, 0], [1, 2, 2, b'set_time!!!'], [1, 2, 2, b'0'], [1, 2, 2, b'0'], [1, 2, 2, b'0'], [1, 2, 10, b'set_target!!!'], [1, 2, 2, b'set target number!'], [1, 2, 40, b'!Animation,SET_ANIMATION,#NextAnim,0,X,864,Y,1952'], [1, 2, 9, b'\r\r\r\r\r\r\r\r\x00'], [1, 6, '', ''], [1, 6, '', ''], [1, 6, '', ''], [1, 6, '', ''], [1, 6, '', ''], [1, 6, '', ''] ])
-        self.update_frame_number_label()
         self.load_frame_data()
-        self.frame_number_label.config(text=f"Frame Number: {self.current_array_index}")
 
 
     def insert_copy_frame(self):
         self.current_array_index += 1
         self.stored_frames.insert(self.current_array_index, self.stored_frames[self.current_array_index - 1].copy())
-        self.update_frame_number_label()
-        self.frame_number_label.config(text=f"Frame Number: {self.current_array_index}")
+        self.load_frame_data()
 
     def delete_frame(self):
         if len(self.stored_frames) > 1:
             self.stored_frames.pop(self.current_array_index)
             self.current_array_index -= 1
-            self.update_frame_number_label()
             self.load_frame_data()
 
         else:
             self.stored_frames = []
             self.frame_table.delete(*self.frame_table.get_children())
-            self.frame_number_label.config(text="Frame Number: 0")
+            self.frame_number_label.config(text="Frame Number: 0 / 0")
+
+    def animate_single_frame(self):
+        animation.animate_single_frame(self.stored_frames[self.current_array_index])
+
+    def animate_all_frames(self):
+        pass
+
 
     def saveRecord(self):
         selectedRow = self.frame_table.focus()
@@ -253,7 +257,7 @@ class main_window(TkinterDnD.Tk):
         
 
     def update_frame_number_label(self):
-        self.frame_number_label.config(text=f"Frame Number: {self.current_array_index}")
+        self.frame_number_label.config(text=f"Frame Number: {self.current_array_index} / " + str(len(self.stored_frames)))
 
     def selectRecord(self):
         self.newTextEntry.delete("0.0", "end")
@@ -289,13 +293,10 @@ class main_window(TkinterDnD.Tk):
                 self.count += 1
             elif len(array) == 4:
                 encoding = ""
-                if self.current_array_index == 57:
-                    if array[1] == 6:
-                        pass
                 if array[3] is not None and isinstance(array[3], bytes):
                     decoded_value = array[3].decode("utf-8").rstrip('\x00')
                     # Adjusted regex to include underscores and alphanumeric characters
-                    if re.match("^[a-zA-Z0-9_#!]", decoded_value):
+                    if re.match("^[a-zA-Z0-9_#!-=]", decoded_value):
                         value = decoded_value
                         encoding = 'str'
                     else:
@@ -307,11 +308,11 @@ class main_window(TkinterDnD.Tk):
                 # Insert the array with 4 elements into the table, filling all columns
                 self.frame_table.insert(parent="", index=self.count, values=(array[0], array[1], array[2], value, encoding))
                 self.count += 1
+        self.update_frame_number_label()
 
     def display_next_array(self):
         if self.current_array_index < len(self.stored_frames) - 1:
             self.current_array_index += 1
-            self.update_frame_number_label()
             next_array = self.stored_frames[self.current_array_index]
             self.load_frame_data()
             

@@ -10,6 +10,7 @@ from PIL import Image, ImageTk
 #IconoParser Pluggins
 import IconoParserGUI
 import sceneParserGUI
+import LevelEditorGUI
         
 class main_window(TkinterDnD.Tk):
     
@@ -37,6 +38,8 @@ class main_window(TkinterDnD.Tk):
         self.button_editor.pack()
         self.button_cut_scene = Button(self.button_frame, text="Open Cut Scene Editor (Modify cut scenes)", command=self.open_cut_scene_editor)
         self.button_cut_scene.pack()
+        self.button_level_editor = Button(self.button_frame, text="Open Level Editor (Modify levels)", command=self.open_level_editor)
+        self.button_level_editor.pack()
 
 
     def open_text_editor(self):
@@ -46,6 +49,10 @@ class main_window(TkinterDnD.Tk):
     def open_cut_scene_editor(self):    
         root = sceneParserGUI.main_window()
         root.mainloop()        
+
+    def open_level_editor(self):
+        root = LevelEditorGUI.main_window()
+        root.mainloop()
 
     
 
