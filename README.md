@@ -57,3 +57,31 @@ A drag-and-drop GUI for viewing and editing Iconoclasts cutscene/scene files. Op
 
 ## warpGUI.py
 A GUI level-warp and flag editor for Iconoclasts. Lets you choose an area and room to warp to on next load, and toggle save-file flags such as Relaxed Mode, Hard Mode, Force Night, and Consistent Challenge. 
+
+## Distribution
+
+Releases now ship as suite bundles per OS:
+
+- `IconoParser-suite-linux.zip`
+- `IconoParser-suite-windows.zip`
+
+Each bundle contains sibling executables in one folder:
+
+- `IPGUI` / `IPGUI.exe` (launcher)
+- `IconoParserGUI` / `IconoParserGUI.exe`
+- `saveEditor` / `saveEditor.exe`
+- `cutsceneVis` / `cutsceneVis.exe`
+- `warpGUI` / `warpGUI.exe`
+
+This layout is required because the launcher starts the other tools by looking for executables next to itself.
+
+### Build And Release Flow
+
+The GitHub Actions workflow at `.github/workflows/build.yml` supports:
+
+- Push to `main` (build artifacts)
+- Pull requests to `main` (build artifacts)
+- Tags matching `v*` (build + GitHub Release)
+- Manual trigger (`workflow_dispatch`) from the Actions tab
+
+If you want a test release before a final version, create and push a prerelease-like tag such as `v1.2.0-rc1`. The workflow will publish the Linux and Windows suite zip files to that release tag.

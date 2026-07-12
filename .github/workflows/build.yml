@@ -6,6 +6,7 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,11 +17,13 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            artifact-name: IconoParserGUI-linux
-            artifact-path: dist/IconoParserGUI
+            artifact-name: IconoParser-suite-linux
+            bundle-name: IconoParser-suite-linux
+            archive-path: dist/IconoParser-suite-linux.zip
           - os: windows-latest
-            artifact-name: IconoParserGUI-windows
-            artifact-path: dist/IconoParserGUI.exe
+            artifact-name: IconoParser-suite-windows
+            bundle-name: IconoParser-suite-windows
+            archive-path: dist/IconoParser-suite-windows.zip
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -32,14 +35,43 @@ jobs:
       - name: Install dependencies
         run: pip install PyQt6 pyinstaller
 
-      - name: Build
-        run: pyinstaller IconoParserGUI.spec
+      - name: Build executables
+        run: |
+          pyinstaller --noconfirm IPGUI.spec
+          pyinstaller --noconfirm IconoParserGUI.spec
+          pyinstaller --noconfirm saveEditor.spec
+          pyinstaller --noconfirm cutsceneVis.spec
+          pyinstaller --noconfirm warpGUI.spec
+
+      - name: Package bundle (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p dist/${{ matrix.bundle-name }}
+          cp dist/IPGUI dist/${{ matrix.bundle-name }}/
+          cp dist/IconoParserGUI dist/${{ matrix.bundle-name }}/
+          cp dist/saveEditor dist/${{ matrix.bundle-name }}/
+          cp dist/cutsceneVis dist/${{ matrix.bundle-name }}/
+          cp dist/warpGUI dist/${{ matrix.bundle-name }}/
+          cd dist
+          zip -r ${{ matrix.bundle-name }}.zip ${{ matrix.bundle-name }}
+
+      - name: Package bundle (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "dist/${{ matrix.bundle-name }}" | Out-Null
+          Copy-Item "dist/IPGUI.exe" "dist/${{ matrix.bundle-name }}/"
+          Copy-Item "dist/IconoParserGUI.exe" "dist/${{ matrix.bundle-name }}/"
+          Copy-Item "dist/saveEditor.exe" "dist/${{ matrix.bundle-name }}/"
+          Copy-Item "dist/cutsceneVis.exe" "dist/${{ matrix.bundle-name }}/"
+          Copy-Item "dist/warpGUI.exe" "dist/${{ matrix.bundle-name }}/"
+          Compress-Archive -Path "dist/${{ matrix.bundle-name }}" -DestinationPath "${{ matrix.archive-path }}" -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact-name }}
-          path: ${{ matrix.artifact-path }}
+          path: ${{ matrix.archive-path }}
 
   release:
     needs: build
@@ -56,8 +88,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create ${{ github.ref_name }} \
-            artifacts/IconoParserGUI-linux/IconoParserGUI \
-            artifacts/IconoParserGUI-windows/IconoParserGUI.exe \
+            artifacts/IconoParser-suite-linux/IconoParser-suite-linux.zip \
+            artifacts/IconoParser-suite-windows/IconoParser-suite-windows.zip \
             --repo ${{ github.repository }} \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
