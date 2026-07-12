@@ -20,13 +20,13 @@ def guiParse(path):
         output.append(line)  
     return output
 
-def guiExport(data):
+def guiExport(data, output_path="dia2"):
         FILE_MAGIC = b'\x41\x52\x52\x31\x2e\x30\x9a\x10'
         File_Version = b'\x00\x00'
-        
+
         convert = iconoParser.rawParser.parse(data)
         output = FILE_MAGIC + File_Version + convert
-        with open("dia2", "wb") as dia_file:
+        with open(output_path, "wb") as dia_file:
             dia_file.write(output)
 
 

@@ -11,6 +11,8 @@ Controls:
     Click row           — select entry
     Double-click row    — edit value inline
     Toggle button       — flip 0.0 ↔ 1.0 for numeric flags
+    Add entry panel     — add known/missing keys or custom entries
+    Remove selected     — delete currently selected entry
     Search box          — filter by key name
     Save button         — write changes back to file (makes .bak backup first)
     Ctrl+S              — save
@@ -144,6 +146,8 @@ class SaveEditor(tk.Tk):
         self._filepath  = None
         self._entries   = []      # list of [key, vtype, value]  (mutable)
         self._modified  = set()   # indices of modified entries
+        self._structure_modified = False
+        self._known_entries = {}  # key -> (vtype, sample_value, source_name)
         self._filter    = tk.StringVar()
         self._filter.trace_add('write', self._on_filter_change)
         self._shown_indices = []  # entry indices currently visible in tree
@@ -170,6 +174,12 @@ class SaveEditor(tk.Tk):
         tk.Button(bar, text='Save', bg=BG_TOOL, fg=ACC_GRN, relief='flat',
                   activebackground=ACC_GRN, command=self._save_file,
                   padx=10).pack(side='left', padx=4)
+        tk.Button(bar, text='Add', bg=BG_TOOL, fg=ACC_BLUE, relief='flat',
+              activebackground=ACC_BLUE, command=self._add_entry,
+              padx=10).pack(side='left', padx=4)
+        tk.Button(bar, text='Remove', bg=BG_TOOL, fg=ACC_RED, relief='flat',
+              activebackground=ACC_RED, command=self._remove_selected,
+              padx=10).pack(side='left', padx=4)
 
         tk.Label(bar, text='Filter:', bg=BG_TOOL, fg=FG_DIM).pack(side='left', padx=(12,2))
         self._filter_entry = tk.Entry(bar, textvariable=self._filter,
@@ -290,6 +300,53 @@ class SaveEditor(tk.Tk):
 
         ttk.Separator(right, orient='horizontal').pack(fill='x', pady=10)
 
+        tk.Label(right, text='Add entry', bg=BG_PANEL, fg=FG_DIM,
+             font=('TkDefaultFont', 9)).pack(anchor='w')
+
+        self._add_key_var = tk.StringVar()
+        self._add_key_combo = ttk.Combobox(right, textvariable=self._add_key_var,
+                            state='normal', width=26)
+        self._add_key_combo.pack(anchor='w', fill='x', pady=(2, 4))
+        self._add_key_combo.bind('<<ComboboxSelected>>', self._on_add_key_selected)
+
+        type_row = tk.Frame(right, bg=BG_PANEL)
+        type_row.pack(anchor='w', fill='x', pady=(0, 2))
+        tk.Label(type_row, text='Type', bg=BG_PANEL, fg=FG_DIM,
+             font=('TkDefaultFont', 8)).pack(side='left')
+        self._add_type_var = tk.StringVar(value='float')
+        self._add_type_combo = ttk.Combobox(type_row, textvariable=self._add_type_var,
+                             values=('float', 'string'),
+                             state='readonly', width=8)
+        self._add_type_combo.pack(side='left', padx=(8, 0))
+
+        tk.Label(right, text='Initial value', bg=BG_PANEL, fg=FG_DIM,
+             font=('TkDefaultFont', 8)).pack(anchor='w')
+        self._add_value_var = tk.StringVar(value='0')
+        self._add_value_entry = tk.Entry(right, textvariable=self._add_value_var,
+                         bg=BG_APP, fg=FG_EDIT,
+                         insertbackground=FG_EDIT,
+                         relief='flat', font=('TkFixedFont', 10),
+                         width=24)
+        self._add_value_entry.pack(anchor='w', fill='x', pady=(2, 4))
+
+        add_btn_row = tk.Frame(right, bg=BG_PANEL)
+        add_btn_row.pack(anchor='w', fill='x')
+        tk.Button(add_btn_row, text='Use sample',
+              bg=BG_TOOL, fg=ACC_BLUE, relief='flat',
+              activebackground=ACC_BLUE, padx=8,
+              command=self._apply_suggested_sample).pack(side='left', padx=(0, 4))
+        tk.Button(add_btn_row, text='Add entry',
+              bg=BG_TOOL, fg=ACC_GRN, relief='flat',
+              activebackground=ACC_GRN, padx=8,
+              command=self._add_entry).pack(side='left')
+
+        tk.Button(right, text='Remove selected',
+              bg=BG_TOOL, fg=ACC_RED, relief='flat',
+              activebackground=ACC_RED, padx=8,
+              command=self._remove_selected).pack(anchor='w', pady=(6, 0))
+
+        ttk.Separator(right, orient='horizontal').pack(fill='x', pady=10)
+
         self._status_lbl = tk.Label(right, text='', bg=BG_PANEL, fg=FG_DIM,
                                     wraplength=200, justify='left',
                                     font=('TkDefaultFont', 8))
@@ -327,10 +384,13 @@ class SaveEditor(tk.Tk):
                 data = f.read()
             self._entries = parse_map10(data)
             self._modified.clear()
+            self._structure_modified = False
             self._filepath = path
             name = os.path.basename(path)
             self._title_lbl.config(text=name)
             self.title(f'SaveEditor — {name}')
+            self._known_entries = self._discover_known_entries(path)
+            self._refresh_add_suggestions()
             self._rebuild_tree()
             n = len(self._entries)
             self._set_status(f'Loaded {n} entries from {name}')
@@ -340,7 +400,7 @@ class SaveEditor(tk.Tk):
     def _save_file(self):
         if not self._filepath:
             return
-        if not self._modified:
+        if not self._modified and not self._structure_modified:
             self._set_status('No changes to save.')
             return
         # Backup
@@ -357,10 +417,72 @@ class SaveEditor(tk.Tk):
                 f.write(data)
             n = len(self._modified)
             self._modified.clear()
+            self._structure_modified = False
+            self._refresh_add_suggestions()
             self._rebuild_tree()
-            self._set_status(f'Saved {n} change(s). Backup: {os.path.basename(bak)}')
+            self._set_status(f'Saved {n} value change(s). Backup: {os.path.basename(bak)}')
         except Exception as e:
             messagebox.showerror('Save error', str(e))
+
+    def _discover_known_entries(self, current_path):
+        known = {}
+        seen_paths = set()
+        candidate_dirs = []
+        if current_path:
+            candidate_dirs.append(os.path.dirname(os.path.abspath(current_path)))
+        if os.path.isdir(SAVE_ROOT):
+            candidate_dirs.append(os.path.abspath(SAVE_ROOT))
+
+        for cdir in candidate_dirs:
+            for name in ('point', 'save1', 'save2', 'save3'):
+                path = os.path.join(cdir, name)
+                if not os.path.isfile(path):
+                    continue
+                abs_path = os.path.abspath(path)
+                if current_path and abs_path == os.path.abspath(current_path):
+                    continue
+                if abs_path in seen_paths:
+                    continue
+                seen_paths.add(abs_path)
+                try:
+                    with open(abs_path, 'rb') as f:
+                        entries = parse_map10(f.read())
+                except Exception:
+                    continue
+                src_name = os.path.basename(abs_path)
+                for key, vtype, val in entries:
+                    if key not in known:
+                        known[key] = (vtype, val, src_name)
+        return known
+
+    def _refresh_add_suggestions(self):
+        existing = {key for key, _, _ in self._entries}
+        suggestions = sorted(key for key in self._known_entries if key not in existing)
+        self._add_key_combo['values'] = suggestions
+        current = self._add_key_var.get().strip()
+        if (not current) or (current in existing):
+            if suggestions:
+                self._add_key_var.set(suggestions[0])
+                self._apply_suggested_sample()
+            else:
+                self._add_key_var.set('')
+                self._add_type_var.set('float')
+                self._add_value_var.set('0')
+
+    def _on_add_key_selected(self, _event=None):
+        self._apply_suggested_sample()
+
+    def _apply_suggested_sample(self):
+        key = self._add_key_var.get().strip()
+        if not key:
+            return
+        meta = self._known_entries.get(key)
+        if not meta:
+            return
+        vtype, sample, src_name = meta
+        self._add_type_var.set('float' if vtype == 1 else 'string')
+        self._add_value_var.set(str(sample))
+        self._set_status(f'Loaded sample for {key!r} from {src_name}')
 
     # ── Tree management ───────────────────────────────────────────────────────
 
@@ -436,6 +558,71 @@ class SaveEditor(tk.Tk):
         self._modified.add(idx)
         self._refresh_row(idx)
         self._set_status(f'Modified: {key!r}  →  {new_val!r}  (unsaved)')
+
+    def _add_entry(self):
+        key = self._add_key_var.get().strip()
+        if not key:
+            messagebox.showerror('Missing key', 'Enter a key name to add.')
+            return
+        if any(existing_key == key for existing_key, _, _ in self._entries):
+            messagebox.showerror('Duplicate key', f'Entry {key!r} already exists in this file.')
+            return
+
+        type_name = self._add_type_var.get().strip().lower()
+        vtype = 1 if type_name == 'float' else 2
+        raw_value = self._add_value_var.get()
+        try:
+            value = float(raw_value) if vtype == 1 else raw_value
+        except ValueError:
+            messagebox.showerror('Invalid value',
+                                 f'Cannot convert {raw_value!r} to float for key {key!r}')
+            return
+
+        self._entries.append([key, vtype, value])
+        new_idx = len(self._entries) - 1
+        self._modified.add(new_idx)
+        self._structure_modified = True
+        if key not in self._known_entries:
+            self._known_entries[key] = (vtype, value, 'current')
+
+        self._refresh_add_suggestions()
+        self._rebuild_tree()
+        self._tree.selection_set(str(new_idx))
+        self._tree.focus(str(new_idx))
+        self._tree.see(str(new_idx))
+        self._on_select()
+        self._set_status(f'Added: {key!r}  →  {value!r}  (unsaved)')
+
+    def _remove_selected(self):
+        sel = self._tree.selection()
+        if not sel:
+            self._set_status('Select an entry to remove.')
+            return
+        idx = int(sel[0])
+        key, _, _ = self._entries[idx]
+        if not messagebox.askyesno('Remove entry', f'Delete entry {key!r}?'):
+            return
+
+        self._entries.pop(idx)
+        self._modified = {i for i in self._modified if i != idx}
+        self._modified = {i - 1 if i > idx else i for i in self._modified}
+        self._structure_modified = True
+
+        self._refresh_add_suggestions()
+        self._rebuild_tree()
+
+        if self._entries:
+            new_idx = idx if idx < len(self._entries) else len(self._entries) - 1
+            self._tree.selection_set(str(new_idx))
+            self._tree.focus(str(new_idx))
+            self._tree.see(str(new_idx))
+            self._on_select()
+        else:
+            self._detail_key.config(text='')
+            self._val_var.set('')
+            self._type_lbl.config(text='')
+
+        self._set_status(f'Removed: {key!r}  (unsaved)')
 
     def _toggle_value(self):
         sel = self._tree.selection()

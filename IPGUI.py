@@ -27,9 +27,9 @@ class main_window(TkinterDnD.Tk):
         self.filemenu.add_command(label="Open Cut Scene Editor", command=self.open_cut_scene_editor)
         self.menubar.add_cascade(label="File", menu=self.filemenu)
 
-        self.robin_image = ImageTk.PhotoImage(Image.open("Robin.png"))
-        robin_label = Label(self, image=self.robin_image)
-        robin_label.pack()
+        #self.robin_image = ImageTk.PhotoImage(Image.open("Robin.png"))
+        #robin_label = Label(self, image=self.robin_image)
+        #robin_label.pack()
         self.label = Label(self, text="Welcome to IconoParser. Please select an option below.")
         self.label.pack()
         self.button_frame = Frame(self)
