@@ -28,7 +28,7 @@ from tkinter import ttk, filedialog, messagebox, simpledialog
 
 import platform
 if platform.system() == 'Windows':
-    SAVE_ROOT = os.path.expandvars(r'%USERPROFILE%\\AppData\\Local\\Iconoclasts\\data')
+    SAVE_ROOT = os.path.expandvars(r'%PROGRAMFILES(X86)%\Steam\steamapps\common\Iconoclasts\data')
 else:
     SAVE_ROOT = os.path.expanduser('~/.local/share/Steam/steamapps/common/Iconoclasts/data')
 

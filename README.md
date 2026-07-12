@@ -46,3 +46,14 @@ This command takes the following parameters:<br>
 - the format we are converting to `dia`
 
 Known issue: using both methods could cause some wonkiness. The CSV method currently has a discrepency that is caused by using the CSV format. I am planning to modify this format to avoid these problems but have not yet done so.
+
+# Additional Tools
+
+## saveEditor.py
+An interactive GUI editor for Iconoclasts save files . Load a save file via the menu, browse and filter entries, edit values inline or toggle numeric flags, then write changes back to disk (a `.bak` backup is created automatically).
+
+## sceneParserGUI.py
+A drag-and-drop GUI for viewing and editing Iconoclasts cutscene/scene files. Open a scene file through the File menu, inspect its frames and their properties in a tree view, and export the modified file when done.
+
+## warpGUI.py
+A GUI level-warp and flag editor for Iconoclasts. Lets you choose an area and room to warp to on next load, and toggle save-file flags such as Relaxed Mode, Hard Mode, Force Night, and Consistent Challenge. 
